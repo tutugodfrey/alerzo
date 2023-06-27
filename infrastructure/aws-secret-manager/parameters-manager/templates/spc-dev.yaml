@@ -1,0 +1,33 @@
+{{- define "parameters-manager.parameters" }}
+objects: |
+  - objectName: alerzopay-rds-dev
+    objectType: secretsmanager
+    jmesPath:
+      - path: username
+        objectAlias: dbusername
+      - path: password
+        objectAlias: dbpassword
+{{- end }}
+
+{{- define "parameters-manager.secretObjects" }}
+- secretName: dev-parameters
+  type: Opaque
+  data:
+  - objectName: dbusername
+    key: db_username_01
+  - objectName: dbpassword
+    key: db_password_01
+{{- end }}
+
+{{ if eq .Values.namespace "develop" }}
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: {{ tpl .Values.secretProviderClass.name . }}
+spec:
+  provider: {{ .Values.secretProviderClass.provider }}
+  parameters:
+    {{- include "parameters-manager.parameters" . | indent 4 }}
+  secretObjects:
+    {{- include "parameters-manager.secretObjects" . | indent 2 }}
+{{ end }}

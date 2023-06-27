@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: >
+  Create a transit gateway. The transit gateway created in the network account will be shared with
+  other accounts within the orginazation and VPN and AWS direct connect
+
+Parameters:
+  AmazonSideAsn: 
+    Description: Name of the Transit gateway to create
+    Type: String
+    Default: 65320
+
+  AutoAcceptSharedAttachments:
+    Description: Specify whether to Enable Auto Accept shared Attachment
+    Type: String
+    Default: enable
+    AllowedValues:
+    - enable
+    - disable
+
+  DefaultRouteTableAssociation:
+    Description: Specify whether to Enable Default route table association
+    Type: String
+    Default: enable
+    AllowedValues:
+    - enable
+    - disable
+  DefaultRouteTablePropagation:
+    Description: Specify whether to Enable route table propagation
+    Type: String
+    Default: enable
+    AllowedValues:
+    - enable
+    - disable
+
+  DnsSupport:
+    Description: Specify whether to enable dns support
+    Type: String
+    Default: enable
+    AllowedValues:
+    - enable
+    - disable
+
+  MulticastSupport:
+    Description: Specify whether to enable multicast support
+    Type: String
+    Default: enable
+    AllowedValues:
+    - enable
+    - disable
+
+Resources:
+  TransitGateway:
+    Type: AWS::EC2::TransitGateway
+    Properties:
+      Description: Myaccount
+      AmazonSideAsn: !Ref AmazonSideAsn
+      AssociationDefaultRouteTableId: true
+      AutoAcceptSharedAttachments: !Ref AutoAcceptSharedAttachments
+      DefaultRouteTableAssociation: !Ref DefaultRouteTableAssociation
+      DefaultRouteTablePropagation: !Ref DefaultRouteTablePropagation
+      DnsSupport: !Ref DnsSupport
+      MulticastSupport: !Ref MulticastSupport
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::AccountId}-shared-tgw
+
+Outputs:
+  TransitGatewayId:
+    Description: Return the ID of the transit gateway
+    Value: !Ref TransitGateway
+    Export:
+      Name: !Sub ${AWS::AccountId}-shared-tgw-Id
+
+  TransitGatewayArn:
+    Description: The Arn of the transit gateway
+    Value: !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:transit-gateway/${TransitGateway}
+    Export:
+      Name: !Sub ${AWS::AccountId}-shared-tgw-arn

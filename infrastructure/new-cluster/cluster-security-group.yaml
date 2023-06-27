@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  Deploy and manage security group rules attached to default security group created by 
+  eks cluster to control inbound traffic to cluster resources.
+Parameters:
+  ProjectName:
+    Description: Specify the name of the project
+    Type: String
+    Default: alerzopay
+    
+  PublicCidrIp:
+    Description: Public Ip Cidr range
+    Type: String
+    Default: 0.0.0.0/0
+
+  VpcCidr:
+    Description: The Cidr of the VPC for the security group. This is the VPC used for EKS cluster
+    Type: String
+    Default: 10.10.0.0/16
+
+  EksClusterSG:
+    Description: Default security group created by eksctl
+    Type: String
+    Default: sg-0db1b945700a3032d
+
+Resources:
+  # communication within the network
+  EksClusterSGIngres:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref EksClusterSG
+      Description: How communication within the cluster on port 80 (cluster admin defined, applied with cloudformation)
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: !Ref VpcCidr
+
+  # Range of node port to expose 
+  EksClusterSGIngresSelf:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref EksClusterSG
+      Description: Range of Node Ports to expose from the cluster (cluster admin defined, applied with cloudformation)
+      IpProtocol: tcp
+      FromPort: 30000
+      ToPort: 32767
+      # Use this allow nodePort access within the cluster
+      # SourceSecurityGroupId: !Ref EksClusterSG
+
+      # Use this to allow nodePort access outside the cluster
+      CidrIp: !Ref PublicCidrIp

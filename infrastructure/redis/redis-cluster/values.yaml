@@ -1,0 +1,23 @@
+namespace: redis
+
+environment: develop
+
+pv:
+  pvNamePrefix: redis
+  storage: 2Gi
+  storageClassName: "redis-cluster"
+  accessModes: "ReadWriteOnce"
+  volumeReclaimPolicy: Recycle
+  hostPathDir: "/data"
+
+svc:
+  name: redis-cluster # same name is used for service and sts
+  selector:
+    app: redis-cluster
+
+configMap:
+  name: redis-cluster
+  defaultMode: 0755
+
+sts:
+  image: redis:5.0.1-alpine

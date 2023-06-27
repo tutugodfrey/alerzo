@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.svc.name }}-{{ .Values.environment }}
+  namespace: {{ .Values.namespace }}
+  labels:
+     app: {{ .Values.svc.selector.app }}-{{ .Values.environment }}
+spec:
+  serviceName: {{ .Values.svc.name }}-{{ .Values.environment }}
+  replicas: 6
+  selector:
+    matchLabels:
+      app: {{ .Values.svc.selector.app }}-{{ .Values.environment }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.svc.selector.app }}-{{ .Values.environment }}
+    spec:
+      containers:
+      - name: redis
+        image: {{ .Values.sts.image }}
+        ports:
+        - containerPort: 6379
+          name: client
+        - containerPort: 16379
+          name: gossip
+        command: ["/conf/update-node.sh", "redis-server", "/conf/redis.conf"]
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        volumeMounts:
+        - name: conf
+          mountPath: /conf
+          readOnly: false
+        - name: data
+          mountPath: {{ .Values.pv.hostPathDir }}/{{ .Values.environment }}
+          readOnly: false
+      volumes:
+        - name: conf
+          configMap:
+            name: {{ .Values.configMap.name }}-{{ .Values.environment }}
+            defaultMode: {{ .Values.configMap.defaultMode }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ {{ .Values.pv.accessModes }} ]
+        storageClassName: {{ .Values.pv.storageClassName }}
+        resources:
+          requests:
+            storage: {{ .Values.pv.storage }}

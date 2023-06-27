@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  Deploy and manage security group needed across the architecture
+Parameters:
+  ProjectName:
+    Description: Specify the name of the project
+    Type: String
+    Default: alerzopay
+  PublicCidrIp:
+    Description: Public Ip Cidr range
+    Type: String
+    Default: 0.0.0.0/0
+
+Resources:
+  EksClusterSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${ProjectName}-EKS-SG2
+      GroupDescription: !Sub ${ProjectName} Security Group
+      VpcId:
+        Fn::ImportValue: !Sub ${ProjectName}-VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-sg2
+
+  EksClusterSGIngres:
+    Type: AWS::EC2::SecurityGroupIngress
+    DependsOn: EksClusterSG
+    Properties:
+      GroupId: !Ref EksClusterSG 
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: 10.10.0.0/16 # communication within the network
+
+  EksClusterSGIngresSelf:
+    Type: AWS::EC2::SecurityGroupIngress
+    DependsOn: EksClusterSG
+    Properties:
+      GroupId: !Ref EksClusterSG 
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+      SourceSecurityGroupId: !Ref EksClusterSG
+
+  EksClusterSGIngresAllProtocolPort:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref EksSecurityGroup 
+      IpProtocol: -1
+      CidrIp: 0.0.0.0/0
+
+
+Outputs:
+  EksClusterSG:
+    Description: ID of the Security group attached to EKS cluster
+    Value: !Ref EksClusterSG
+    Export:
+      Name: !Sub ${ProjectName}-EksClusterSG2

@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  Deploy and manage security group needed for resource used in the vpc
+Parameters:
+  ProjectName:
+    Description: Specify the name of the project
+    Type: String
+    Default: alerzopay
+  PublicCidrIp:
+    Description: Public Ip Cidr range
+    Type: String
+    Default: 0.0.0.0/0
+
+Resources:
+  EksClusterSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${ProjectName}-EKS-SG
+      GroupDescription: !Sub ${ProjectName} Security Group
+      VpcId:
+        Fn::ImportValue: !Sub ${ProjectName}-VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref PublicCidrIp
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref PublicCidrIp
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-sg
+
+Outputs:
+  EksClusterSG:
+    Description: ID of the Security group attached to EKS cluster
+    Value: !Ref EksClusterSG
+    Export:
+      Name: !Sub ${ProjectName}-EksClusterSG

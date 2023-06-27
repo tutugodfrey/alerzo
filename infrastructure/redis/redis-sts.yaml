@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    meta.helm.sh/release-name: redis-develop
+    meta.helm.sh/release-namespace: redis
+  creationTimestamp: "2022-05-03T12:30:24Z"
+  generation: 4
+  labels:
+    app: redis-cluster
+    app.kubernetes.io/managed-by: Helm
+  name: redis-cluster-develop
+  namespace: redis
+  resourceVersion: "55781345"
+  uid: 3d41d92a-9da9-47fc-a6e6-612fcda316ce
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 6
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: redis-cluster
+  serviceName: redis-cluster-develop
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2022-05-04T14:38:01+01:00"
+      creationTimestamp: null
+      labels:
+        app: redis-cluster
+    spec:
+      containers:
+      - command:
+        - /conf/update-node.sh
+        - redis-server
+        - /conf/redis.conf
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        image: redis:5.0.1-alpine
+        imagePullPolicy: IfNotPresent
+        name: redis
+        ports:
+        - containerPort: 6379
+          name: client
+          protocol: TCP
+        - containerPort: 16379
+          name: gossip
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /conf
+          name: conf
+        - mountPath: /data/develop
+          name: data
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 493
+          name: redis-cluster-develop
+        name: conf
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 2Gi
+      storageClassName: redis-cluster
+      volumeMode: Filesystem
+    status:
+      phase: Pending
+status:
+  collisionCount: 0
+  currentReplicas: 6
+  currentRevision: redis-cluster-develop-775c5d57c8
+  observedGeneration: 4
+  readyReplicas: 6
+  replicas: 6
+  updateRevision: redis-cluster-develop-775c5d57c8
+  updatedReplicas: 6

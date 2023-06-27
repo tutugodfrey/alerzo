@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ include "load-tester.fullname" . }}
+  labels:
+    {{- include "load-tester.labels" . | nindent 4 }}
+data:
+  install.sh: |
+    #! /bin/bash
+    apt-get update
+    apt-get install -y curl
+
+  loadtest.sh: |
+    #! /bin/bash
+    while true; do curl http://{{ .Values.loadtest.service }}.{{ .Values.loadtest.namespace }}.svc.cluster.local/{{ .Values.loadtest.endpoint }}; done;

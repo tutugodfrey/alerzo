@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  TransitGatewayAttachment:
+    Type: AWS::EC2::TransitGatewayAttachment
+    Properties:
+      SubnetIds:
+        -
+      TransitGatewayId:
+        Fn::ImportValue: !Sub ${ProjectName}-Transit-Gateway-Id
+      Tags:
+        - Key:  Name
+          Values:
